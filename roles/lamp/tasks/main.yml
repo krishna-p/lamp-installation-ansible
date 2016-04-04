@@ -1,0 +1,27 @@
+---
+ - name: 1.Installing Apache2
+   apt: pkg=apache2 state=installed update_cache=yes
+   register: apacheinstalled
+   notify:
+    - Start Apache
+ - name: 2.Installing MySQL
+   apt: name={{item}} state=installed
+   with_items:
+    - mysql-server
+    - libapache2-mod-auth-mysql
+    - php5-mysql
+   when: apacheinstalled|success
+   register: mysqlinstalled
+   notify:
+    - Start MySQL
+ - name: 3.Installing PHP
+   apt: name={{item}} state=installed
+   with_items:
+    - php5
+    - libapache2-mod-php5
+    - php5-mcrypt
+   when: mysqlinstalled|success
+   notify:
+    - Reload Apache
+ - name: 4.Copying file to document root
+   copy: src=info.php dest=/var/www/html/
